@@ -1,6 +1,6 @@
 package com.example.capital.ui.state
 
-import com.example.capital.model.BusinessModel
+import com.example.domain.entity.BusinessModel
 import com.example.capital.model.GlobalModifiers
 
 /**

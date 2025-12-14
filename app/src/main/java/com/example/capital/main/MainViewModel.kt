@@ -2,34 +2,40 @@ package com.example.capital.main
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.capital.model.BusinessModel
+import com.example.domain.entity.BusinessModel
 import com.example.capital.model.GlobalModifiers
+import com.example.capital.model.LevelMultiplier
 import com.example.capital.ui.state.BusinessUiState
 import com.example.capital.ui.state.EconomyState
 import com.example.capital.ui.state.GameState
 import com.example.capital.ui.state.MainUiState
-import com.example.capital.utils.printSecretMessageGrid
-import kotlinx.coroutines.Dispatchers
+import com.example.domain.usecase.GetAllBusinessUseCase
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import javax.inject.Inject
+import kotlin.collections.indexOfFirst
+import kotlin.collections.toMutableList
 
-class MainViewModel : ViewModel() {
+@HiltViewModel
+class MainViewModel @Inject constructor(private val getAlBusinessesUseCase: GetAllBusinessUseCase) :
+    ViewModel() {
 
     // ---- StateFlow exposed to UI ----
-    private val _uiState = MutableStateFlow(createInitialUiState())
+    private val _uiState = MutableStateFlow(MainUiState.Empty)
     val uiState: StateFlow<MainUiState> = _uiState
 
     // ---- Internal mutable game state (not exposed directly) ----
-    private var gameState: GameState = createInitialGameState()
+    private lateinit var gameState: GameState
 
     private var tickerJob: Job? = null
 
     init {
         startTicker()
+        loadBusinesses()
     }
 
     // ------------------------------------------------------------
@@ -100,6 +106,10 @@ class MainViewModel : ViewModel() {
         // In a real game this would navigate to Prestige screen
         // For now we could do nothing or log.
         // We'll just no-op here.
+    }
+
+    fun onLevelMultiplierSelected(multiplier: LevelMultiplier) {
+
     }
 
     // ------------------------------------------------------------
@@ -173,6 +183,31 @@ class MainViewModel : ViewModel() {
         pushToUi()
     }
 
+    private fun loadBusinesses() {
+        viewModelScope.launch {
+            // 1) call use case
+            val startingBusinesses = getAlBusinessesUseCase()
+
+            val modifiers = GlobalModifiers(
+                boostActive = false,
+                boostSecondsLeft = 0,
+                boostMultiplier = 1.0,
+                prestigePoints = 0
+            )
+
+            val economy = EconomyState(
+                cash = 1_000.0,
+                offlineEarnings = 2_000.0, // pretend we had some offline stash to claim
+            )
+
+            gameState = GameState(
+                businesses = startingBusinesses,
+                modifiers = modifiers,
+                economy = economy
+            )
+        }
+    }
+
     // ------------------------------------------------------------
     // Helpers
     // ------------------------------------------------------------
@@ -192,52 +227,8 @@ class MainViewModel : ViewModel() {
     // Initial State
     // ------------------------------------------------------------
 
-    private fun createInitialGameState(): GameState {
-        val startingBusinesses = listOf(
-            BusinessModel(
-                id = "coffee",
-                name = "Coffee Shop",
-                level = 1,
-                baseIncomePerSec = 10.0,   // $10/s at lvl1 baseline before scaling
-                automated = true
-            ),
-            BusinessModel(
-                id = "logistics",
-                name = "Logistics Fleet",
-                level = 1,
-                baseIncomePerSec = 25.0,
-                automated = false
-            ),
-            BusinessModel(
-                id = "startup",
-                name = "AI Startup",
-                level = 1,
-                baseIncomePerSec = 200.0,
-                automated = true
-            )
-        )
-
-        val modifiers = GlobalModifiers(
-            boostActive = false,
-            boostSecondsLeft = 0,
-            boostMultiplier = 1.0,
-            prestigePoints = 0
-        )
-
-        val economy = EconomyState(
-            cash = 1_000.0,
-            offlineEarnings = 2_000.0, // pretend we had some offline stash to claim
-        )
-
-        return GameState(
-            businesses = startingBusinesses,
-            modifiers = modifiers,
-            economy = economy
-        )
-    }
-
     private fun createInitialUiState(): MainUiState {
-        return createInitialGameState().toUiState()
+        return gameState.toUiState()
     }
 
     // ------------------------------------------------------------

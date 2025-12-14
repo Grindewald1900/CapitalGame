@@ -1,6 +1,7 @@
 package com.example.capital.main
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.ButtonDefaults
@@ -12,15 +13,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.capital.model.SpeedMultiplier
+import com.example.capital.model.LevelMultiplier
 
 @Composable
 fun UpgradeMultiplierRow(
-    selectedMultiplier: SpeedMultiplier,
-    onSelect: (SpeedMultiplier) -> Unit,
+    selectedMultiplier: LevelMultiplier,
+    onSelect: (LevelMultiplier) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val options: List<SpeedMultiplier> = listOf(SpeedMultiplier.One(), SpeedMultiplier.Ten(), SpeedMultiplier.TwentyFive(), SpeedMultiplier.Hundred(), SpeedMultiplier.Max())
+    val options: List<LevelMultiplier> = listOf(LevelMultiplier.One(), LevelMultiplier.Ten(), LevelMultiplier.TwentyFive(), LevelMultiplier.Hundred(), LevelMultiplier.Max())
 
     Row(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -32,6 +33,7 @@ fun UpgradeMultiplierRow(
             OutlinedButton(
                 onClick = { onSelect(label) },
                 modifier = Modifier.weight(1f),
+                contentPadding = PaddingValues(),
                 colors = if (isSelected) {
                     ButtonDefaults.outlinedButtonColors(
                         containerColor = MaterialTheme.colorScheme.primaryContainer,
@@ -43,7 +45,7 @@ fun UpgradeMultiplierRow(
                 border = if (isSelected) null else ButtonDefaults.outlinedButtonBorder
             ) {
                 Text(
-                    text = label.,
+                    text = label.str,
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.SemiBold
                 )

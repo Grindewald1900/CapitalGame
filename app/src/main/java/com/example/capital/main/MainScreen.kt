@@ -8,6 +8,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.capital.model.LevelMultiplier
 import com.example.capital.ui.state.BusinessUiState
 import com.example.capital.ui.state.MainUiState
 
@@ -18,6 +19,7 @@ fun MainScreen(
     onClaimOffline: () -> Unit,
     onActivateBoost: () -> Unit,
     onOpenPrestige: () -> Unit,
+    onSpeedSelected: (speed: LevelMultiplier) -> Unit
 ) {
     // Structure:
     // Column
@@ -41,7 +43,8 @@ fun MainScreen(
                 cash = state.cash,
                 incomePerSec = state.incomePerSec,
                 prestigePoints = state.prestigePoints,
-                onOpenPrestige = onOpenPrestige
+                onOpenPrestige = onOpenPrestige,
+                onSpeedSelected = onSpeedSelected
             )
 
             BusinessList(
@@ -118,7 +121,8 @@ private fun MainScreenPreview() {
             onUpgradeBusiness = {},
             onClaimOffline = {},
             onActivateBoost = {},
-            onOpenPrestige = {}
+            onOpenPrestige = {},
+            onSpeedSelected = {}
         )
     }
 }

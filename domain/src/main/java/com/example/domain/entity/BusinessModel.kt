@@ -1,4 +1,4 @@
-package com.example.capital.model
+package com.example.domain.entity
 
 import kotlin.math.pow
 
