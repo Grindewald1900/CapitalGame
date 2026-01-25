@@ -1,9 +1,12 @@
 package com.example.capital.ui.state
 
+import com.example.domain.entity.EconomyModel
+
 /**
  * Persistent player economy snapshot.
  */
-data class EconomyState(
-    val cash: Double,
-    val offlineEarnings: Double?,     // what's claimable
-)
+sealed interface EconomyState {
+    data object Loading : EconomyState
+    data class Success(val model: EconomyModel) : EconomyState
+    data class Fail(val message: String, val cause: Throwable? = null) : EconomyState
+}

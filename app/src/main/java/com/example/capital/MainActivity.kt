@@ -16,6 +16,7 @@ import dagger.hilt.android.AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val level: MutableList<Int> = mutableListOf()
         enableEdgeToEdge()
         setContent {
             CapitalTheme {

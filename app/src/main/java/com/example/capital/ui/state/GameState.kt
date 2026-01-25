@@ -2,6 +2,7 @@ package com.example.capital.ui.state
 
 import com.example.domain.entity.BusinessModel
 import com.example.capital.model.GlobalModifiers
+import com.example.domain.entity.EconomyModel
 
 /**
  * Full internal game state.
@@ -9,5 +10,5 @@ import com.example.capital.model.GlobalModifiers
 data class GameState(
     val businesses: List<BusinessModel>,
     val modifiers: GlobalModifiers,
-    val economy: EconomyState,
+    val economy: EconomyModel,
 )

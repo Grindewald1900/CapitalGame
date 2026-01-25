@@ -1,5 +1,7 @@
 package com.example.capital.model
 
+import kotlin.io.encoding.Base64
+
 
 /**
  * Game-wide modifiers that aren't tied to a single business.
@@ -10,4 +12,13 @@ data class GlobalModifiers(
     val boostSecondsLeft: Int,
     val boostMultiplier: Double,      // e.g. 5.0 during boost, 1.0 normally
     val prestigePoints: Int,
-)
+){
+    companion object{
+        val Default = GlobalModifiers(
+            boostActive = false,
+            boostSecondsLeft = 0,
+            boostMultiplier = 1.0,
+            prestigePoints = 0
+        )
+    }
+}

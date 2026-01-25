@@ -9,7 +9,10 @@ import com.example.capital.ui.state.BusinessUiState
 import com.example.capital.ui.state.EconomyState
 import com.example.capital.ui.state.GameState
 import com.example.capital.ui.state.MainUiState
+import com.example.domain.entity.EconomyModel
 import com.example.domain.usecase.GetAllBusinessUseCase
+import com.example.domain.usecase.GetEconomyUseCase
+import com.example.domain.usecase.SaveEconomyUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -21,7 +24,11 @@ import kotlin.collections.indexOfFirst
 import kotlin.collections.toMutableList
 
 @HiltViewModel
-class MainViewModel @Inject constructor(private val getAlBusinessesUseCase: GetAllBusinessUseCase) :
+class MainViewModel @Inject constructor(
+    private val getAlBusinessesUseCase: GetAllBusinessUseCase,
+    private val getEconomyUseCase: GetEconomyUseCase,
+    private val saveEconomyUseCase: SaveEconomyUseCase
+) :
     ViewModel() {
 
     // ---- StateFlow exposed to UI ----
@@ -29,7 +36,11 @@ class MainViewModel @Inject constructor(private val getAlBusinessesUseCase: GetA
     val uiState: StateFlow<MainUiState> = _uiState
 
     // ---- Internal mutable game state (not exposed directly) ----
-    private lateinit var gameState: GameState
+    private var gameState: GameState = GameState(
+        businesses = emptyList(),
+        modifiers = GlobalModifiers.Default,
+        economy = EconomyModel(cash = 0.0, offlineEarnings = 0.0)
+    )
 
     private var tickerJob: Job? = null
 
@@ -74,12 +85,16 @@ class MainViewModel @Inject constructor(private val getAlBusinessesUseCase: GetA
         val reward = gs.economy.offlineEarnings ?: 0.0
         if (reward <= 0.0) return
 
-        gameState = gs.copy(
-            economy = gs.economy.copy(
-                cash = gs.economy.cash + reward,
-                offlineEarnings = null
-            )
+        val economy = gs.economy.copy(
+            cash = gs.economy.cash + reward,
+            offlineEarnings = 0.0
         )
+        gameState = gs.copy(
+            economy = economy
+        )
+        viewModelScope.launch {
+            saveEconomyUseCase(economy)
+        }
 
         pushToUi()
     }
@@ -185,9 +200,12 @@ class MainViewModel @Inject constructor(private val getAlBusinessesUseCase: GetA
 
     private fun loadBusinesses() {
         viewModelScope.launch {
-            // 1) call use case
-            val startingBusinesses = getAlBusinessesUseCase()
-
+            getAlBusinessesUseCase().collect { businesses ->
+                gameState = gameState.copy(businesses = businesses)
+            }
+            getEconomyUseCase().collect { economy ->
+                gameState = gameState.copy(economy = economy)
+            }
             val modifiers = GlobalModifiers(
                 boostActive = false,
                 boostSecondsLeft = 0,
@@ -195,16 +213,7 @@ class MainViewModel @Inject constructor(private val getAlBusinessesUseCase: GetA
                 prestigePoints = 0
             )
 
-            val economy = EconomyState(
-                cash = 1_000.0,
-                offlineEarnings = 2_000.0, // pretend we had some offline stash to claim
-            )
-
-            gameState = GameState(
-                businesses = startingBusinesses,
-                modifiers = modifiers,
-                economy = economy
-            )
+            gameState = gameState.copy(modifiers = modifiers)
         }
     }
 
