@@ -24,7 +24,7 @@ class EconomyRepositoryImpl @Inject constructor(
                 if (e is IOException) emit(emptyPreferences()) else throw e
             }
             .map { prefs ->
-                val cash = prefs[EconomyKeys.CASH] ?: 0.0
+                val cash = prefs[EconomyKeys.CASH] ?: 100.0
                 val offline = prefs[EconomyKeys.OFFLINE_EARNINGS] ?: 0.0
                 EconomyModel(cash = cash, offlineEarnings = offline)
             }

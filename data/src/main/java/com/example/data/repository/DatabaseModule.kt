@@ -7,7 +7,6 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.data.storage.AppDatabase
 import com.example.data.storage.BusinessDao
 import com.example.data.storage.BusinessDefinition
-import com.example.domain.repository.BusinessRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -26,7 +25,6 @@ object DatabaseModule {
     @Singleton
     fun provideAppDatabase(
         @ApplicationContext context: Context,
-        // We use a Provider to get the DAO late, after the DB is built
         provider: Provider<BusinessDao>
     ): AppDatabase {
         return Room.databaseBuilder(
@@ -36,10 +34,14 @@ object DatabaseModule {
         ).addCallback(object : RoomDatabase.Callback() {
             override fun onCreate(db: SupportSQLiteDatabase) {
                 super.onCreate(db)
-                // Seed the database on a background thread
                 CoroutineScope(Dispatchers.IO).launch {
-                    val initialData = BusinessDefinition
-                    provider.get().insertAll(initialData)
+                    try {
+                        val initialData = BusinessDefinition
+                        provider.get().insertAll(initialData)
+                        // Log.d("DB", "Seeding successful")
+                    } catch (e: Exception) {
+                        // Log.e("DB", "Seeding failed", e)
+                    }
                 }
             }
         }).build()
@@ -48,7 +50,6 @@ object DatabaseModule {
     @Provides
     @Singleton
     fun provideBusinessDao(database: AppDatabase): BusinessDao {
-        // Provide the DAO using the database instance
         return database.businessDao()
     }
 }

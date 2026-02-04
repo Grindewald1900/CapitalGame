@@ -12,6 +12,7 @@ import com.example.capital.ui.state.MainUiState
 import com.example.domain.entity.EconomyModel
 import com.example.domain.usecase.GetAllBusinessUseCase
 import com.example.domain.usecase.GetEconomyUseCase
+import com.example.domain.usecase.SaveAllBusinessesUseCase
 import com.example.domain.usecase.SaveEconomyUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -27,7 +28,8 @@ import kotlin.collections.toMutableList
 class MainViewModel @Inject constructor(
     private val getAlBusinessesUseCase: GetAllBusinessUseCase,
     private val getEconomyUseCase: GetEconomyUseCase,
-    private val saveEconomyUseCase: SaveEconomyUseCase
+    private val saveEconomyUseCase: SaveEconomyUseCase,
+    private val saveAllBusinessesUseCase: SaveAllBusinessesUseCase
 ) :
     ViewModel() {
 
@@ -39,7 +41,7 @@ class MainViewModel @Inject constructor(
     private var gameState: GameState = GameState(
         businesses = emptyList(),
         modifiers = GlobalModifiers.Default,
-        economy = EconomyModel(cash = 0.0, offlineEarnings = 0.0)
+        economy = EconomyModel(cash = 100.0, offlineEarnings = 0.0)
     )
 
     private var tickerJob: Job? = null
@@ -69,7 +71,9 @@ class MainViewModel @Inject constructor(
         val newBizList = gs.businesses.toMutableList().apply {
             this[bizIndex] = upgraded
         }
-
+        viewModelScope.launch {
+            saveAllBusinessesUseCase(newBizList)
+        }
         gameState = gs.copy(
             businesses = newBizList,
             economy = gs.economy.copy(
@@ -182,6 +186,10 @@ class MainViewModel @Inject constructor(
         // Here we'll just keep whatever was there.
         val offlineStaySame = gs.economy.offlineEarnings
 
+        val updatedEconomy = gs.economy.copy(
+            cash = newCash,
+            offlineEarnings = offlineStaySame
+        )
         // 5. Save new state
         gameState = gs.copy(
             economy = gs.economy.copy(
@@ -195,26 +203,38 @@ class MainViewModel @Inject constructor(
             )
         )
 
+        // Persist the data
+        viewModelScope.launch {
+            saveEconomyUseCase(updatedEconomy)
+        }
+
         pushToUi()
     }
 
     private fun loadBusinesses() {
         viewModelScope.launch {
+            // Load businesses
             getAlBusinessesUseCase().collect { businesses ->
                 gameState = gameState.copy(businesses = businesses)
+                pushToUi()
             }
-            getEconomyUseCase().collect { economy ->
-                gameState = gameState.copy(economy = economy)
-            }
-            val modifiers = GlobalModifiers(
-                boostActive = false,
-                boostSecondsLeft = 0,
-                boostMultiplier = 1.0,
-                prestigePoints = 0
-            )
-
-            gameState = gameState.copy(modifiers = modifiers)
         }
+        viewModelScope.launch {
+            getEconomyUseCase().collect { savedEconomy ->
+                gameState = gameState.copy(economy = savedEconomy)
+                pushToUi()
+            }
+        }
+
+        // Reset modifiers for session start
+        val modifiers = GlobalModifiers(
+            boostActive = false,
+            boostSecondsLeft = 0,
+            boostMultiplier = 1.0,
+            prestigePoints = gameState.modifiers.prestigePoints // Keep prestige if loaded
+        )
+        gameState = gameState.copy(modifiers = modifiers)
+        pushToUi()
     }
 
     // ------------------------------------------------------------
@@ -246,11 +266,23 @@ class MainViewModel @Inject constructor(
 
     private fun GameState.toUiState(): MainUiState {
         val totalIncomePerSec = computeTotalIncomePerSec(this)
+        
+        val visibleBusinesses = mutableListOf<BusinessModel>()
+        var foundFirstLocked = false
+        for (biz in businesses) {
+            if (biz.level > 0) {
+                visibleBusinesses.add(biz)
+            } else if (!foundFirstLocked) {
+                visibleBusinesses.add(biz)
+                foundFirstLocked = true
+            }
+        }
+
         return MainUiState(
             cash = economy.cash,
             incomePerSec = totalIncomePerSec,
             prestigePoints = modifiers.prestigePoints,
-            businesses = businesses.map { it.toUi() },
+            businesses = visibleBusinesses.map { it.toUi() },
             boostActive = modifiers.boostActive,
             boostSecondsLeft = modifiers.boostSecondsLeft,
             offlineEarnings = economy.offlineEarnings
