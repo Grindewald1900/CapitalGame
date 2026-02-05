@@ -8,14 +8,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.example.capital.model.LevelMultiplier
 import com.example.capital.utils.formatMoney
+import com.example.domain.entity.LevelMultiplier
 
 @Composable
 fun TopHeader(
     cash: Double,
     incomePerSec: Double,
     prestigePoints: Int,
+    selectedMultiplier: LevelMultiplier,
     onOpenPrestige: () -> Unit,
     onSpeedSelected: (speed: LevelMultiplier) -> Unit
 ) {
@@ -91,10 +92,13 @@ fun TopHeader(
                 )
             }
 
-            // x1, x10, x25, x100
+            // Multiplier selector
             Spacer(modifier = Modifier.height(12.dp))
 
-            UpgradeMultiplierRow(selectedMultiplier = LevelMultiplier.One(), onSpeedSelected)
+            UpgradeMultiplierRow(
+                selectedMultiplier = selectedMultiplier, 
+                onSelect = onSpeedSelected
+            )
         }
     }
 }

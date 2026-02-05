@@ -27,13 +27,12 @@ fun BusinessCard(
         shadowElevation = 2.dp,
         modifier = Modifier
             .fillMaxWidth()
-            .alpha(if (isLocked) 0.6f else 1.0f) // Grey out if locked
+            .alpha(if (isLocked) 0.6f else 1.0f)
     ) {
         Column(
             modifier = Modifier
                 .padding(16.dp)
         ) {
-            // Row 1: Name + Level + Automation badge
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
@@ -61,7 +60,6 @@ fun BusinessCard(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Row 2: Income/sec + Upgrade button
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
@@ -84,17 +82,24 @@ fun BusinessCard(
 
                 Button(
                     onClick = onUpgrade,
+                    enabled = business.canAfford, // Disable button if not enough money
                     shape = RoundedCornerShape(12.dp),
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp),
                     colors = if (isLocked) {
-                        ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
+                        ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.secondary,
+                            disabledContainerColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.38f)
+                        )
                     } else {
                         ButtonDefaults.buttonColors()
                     }
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        val label = if (isLocked) "Unlock" else "Upgrade"
+                        val prefix = if (business.upgradeLevelGain > 1) "x${business.upgradeLevelGain} " else ""
+                        
                         Text(
-                            text = if (isLocked) "Unlock" else "Upgrade",
+                            text = prefix + label,
                             style = MaterialTheme.typography.labelLarge
                         )
                         Text(

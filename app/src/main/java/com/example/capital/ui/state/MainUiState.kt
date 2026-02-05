@@ -1,5 +1,7 @@
 package com.example.capital.ui.state
 
+import com.example.domain.entity.LevelMultiplier
+
 data class MainUiState(
     val cash: Double,
     val incomePerSec: Double,
@@ -8,6 +10,7 @@ data class MainUiState(
     val boostActive: Boolean,
     val boostSecondsLeft: Int,
     val offlineEarnings: Double?, // null = none available
+    val selectedMultiplier: LevelMultiplier
 ) {
     companion object{
         val Empty: MainUiState = MainUiState(
@@ -17,7 +20,8 @@ data class MainUiState(
             businesses = emptyList(),
             boostActive = false,
             boostSecondsLeft = 0,
-            offlineEarnings = null
+            offlineEarnings = null,
+            selectedMultiplier = LevelMultiplier.One
         )
     }
 }

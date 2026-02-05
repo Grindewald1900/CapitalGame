@@ -13,7 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.capital.model.LevelMultiplier
+import com.example.domain.entity.LevelMultiplier
 
 @Composable
 fun UpgradeMultiplierRow(
@@ -21,7 +21,13 @@ fun UpgradeMultiplierRow(
     onSelect: (LevelMultiplier) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val options: List<LevelMultiplier> = listOf(LevelMultiplier.One(), LevelMultiplier.Ten(), LevelMultiplier.TwentyFive(), LevelMultiplier.Hundred(), LevelMultiplier.Max())
+    val options: List<LevelMultiplier> = listOf(
+        LevelMultiplier.One,
+        LevelMultiplier.Ten,
+        LevelMultiplier.TwentyFive,
+        LevelMultiplier.Hundred,
+        LevelMultiplier.Max
+    )
 
     Row(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -29,7 +35,9 @@ fun UpgradeMultiplierRow(
         modifier = modifier.fillMaxWidth()
     ) {
         options.forEach { label ->
-            val isSelected = label == selectedMultiplier
+            // Use class comparison for reliability across layers
+            val isSelected = label::class == selectedMultiplier::class
+            
             OutlinedButton(
                 onClick = { onSelect(label) },
                 modifier = Modifier.weight(1f),
@@ -53,4 +61,3 @@ fun UpgradeMultiplierRow(
         }
     }
 }
-

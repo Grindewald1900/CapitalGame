@@ -1,7 +1,6 @@
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.kotlin.kapt)
     alias(libs.plugins.devtools.ksp)
 }
 
@@ -26,15 +25,15 @@ android {
 dependencies {
     implementation(project(":domain"))
 
-    // Hilt (optional but common in data module)
+    // Hilt
     implementation(libs.hilt.android)
-    kapt(libs.hilt.compiler)
+    ksp(libs.hilt.compiler)
 
-    // Coroutines (common for repositories)
+    // Coroutines
     implementation(libs.kotlinx.coroutines.core)
-    //datastore
+    // datastore
     implementation(libs.androidx.datastore.preferences)
-    //room
+    // room
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)

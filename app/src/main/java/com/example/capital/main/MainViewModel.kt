@@ -4,12 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.domain.entity.BusinessModel
 import com.example.capital.model.GlobalModifiers
-import com.example.capital.model.LevelMultiplier
 import com.example.capital.ui.state.BusinessUiState
-import com.example.capital.ui.state.EconomyState
 import com.example.capital.ui.state.GameState
 import com.example.capital.ui.state.MainUiState
 import com.example.domain.entity.EconomyModel
+import com.example.domain.entity.LevelMultiplier
 import com.example.domain.usecase.GetAllBusinessUseCase
 import com.example.domain.usecase.GetEconomyUseCase
 import com.example.domain.usecase.SaveAllBusinessesUseCase
@@ -21,8 +20,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import kotlin.collections.indexOfFirst
-import kotlin.collections.toMutableList
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
@@ -33,16 +30,16 @@ class MainViewModel @Inject constructor(
 ) :
     ViewModel() {
 
-    // ---- StateFlow exposed to UI ----
     private val _uiState = MutableStateFlow(MainUiState.Empty)
     val uiState: StateFlow<MainUiState> = _uiState
 
-    // ---- Internal mutable game state (not exposed directly) ----
     private var gameState: GameState = GameState(
         businesses = emptyList(),
         modifiers = GlobalModifiers.Default,
         economy = EconomyModel(cash = 100.0, offlineEarnings = 0.0)
     )
+
+    private var selectedMultiplier: LevelMultiplier = LevelMultiplier.One
 
     private var tickerJob: Job? = null
 
@@ -51,29 +48,25 @@ class MainViewModel @Inject constructor(
         loadBusinesses()
     }
 
-    // ------------------------------------------------------------
-    // Public callbacks (these match MainScreen callbacks)
-    // ------------------------------------------------------------
-
     fun onUpgradeBusiness(businessId: String) {
         val gs = gameState
         val bizIndex = gs.businesses.indexOfFirst { it.id == businessId }
         if (bizIndex == -1) return
 
         val biz = gs.businesses[bizIndex]
-        val cost = biz.upgradeCost()
+        val (cost, levels) = biz.calculateBulkUpgrade(selectedMultiplier, gs.economy.cash)
 
-        // can we afford it?
-        if (gs.economy.cash < cost) return
+        if (levels <= 0 || gs.economy.cash < cost) return
 
-        // pay & level up
-        val upgraded = biz.levelUp()
+        val upgraded = biz.levelUp(levels)
         val newBizList = gs.businesses.toMutableList().apply {
             this[bizIndex] = upgraded
         }
+
         viewModelScope.launch {
             saveAllBusinessesUseCase(newBizList)
         }
+
         gameState = gs.copy(
             businesses = newBizList,
             economy = gs.economy.copy(
@@ -105,11 +98,7 @@ class MainViewModel @Inject constructor(
 
     fun onActivateBoost() {
         val gs = gameState
-
-        // If boost already running, do nothing.
         if (gs.modifiers.boostActive) return
-
-        // Activate a 30s 5x boost.
         gameState = gs.copy(
             modifiers = gs.modifiers.copy(
                 boostActive = true,
@@ -117,23 +106,15 @@ class MainViewModel @Inject constructor(
                 boostMultiplier = 5.0
             )
         )
-
         pushToUi()
     }
 
-    fun onOpenPrestige() {
-        // In a real game this would navigate to Prestige screen
-        // For now we could do nothing or log.
-        // We'll just no-op here.
-    }
+    fun onOpenPrestige() {}
 
     fun onLevelMultiplierSelected(multiplier: LevelMultiplier) {
-
+        selectedMultiplier = multiplier
+        pushToUi()
     }
-
-    // ------------------------------------------------------------
-    // Core loop: runs every second
-    // ------------------------------------------------------------
 
     private fun startTicker() {
         tickerJob?.cancel()
@@ -141,33 +122,20 @@ class MainViewModel @Inject constructor(
             var lastTickTime = System.currentTimeMillis()
             while (true) {
                 delay(1000L)
-
                 val now = System.currentTimeMillis()
                 val deltaSeconds = ((now - lastTickTime) / 1000.0).coerceAtLeast(0.0)
                 lastTickTime = now
-
                 tick(deltaSeconds)
             }
         }
     }
 
-    /**
-     * The heartbeat of the game.
-     * - Adds passive income
-     * - Burns down boost duration
-     * - Accumulates offline earnings logic stub
-     */
     private fun tick(deltaSeconds: Double) {
         val gs = gameState
-
-        // 1. Calculate total income/sec with current multipliers
         val totalIncomePerSec = computeTotalIncomePerSec(gs)
-
-        // 2. Earn money for this tick
         val earned = totalIncomePerSec * deltaSeconds
         val newCash = gs.economy.cash + earned
 
-        // 3. Update boost timer
         val newBoostSecondsLeft = if (gs.modifiers.boostActive) {
             (gs.modifiers.boostSecondsLeft - deltaSeconds).toInt().coerceAtLeast(0)
         } else {
@@ -175,27 +143,15 @@ class MainViewModel @Inject constructor(
         }
 
         val boostStillActive = gs.modifiers.boostActive && newBoostSecondsLeft > 0
-
-        val newBoostMultiplier =
-            if (boostStillActive) gs.modifiers.boostMultiplier else 1.0
-
-        // 4. Offline earnings accumulation (stub logic)
-        // In a real app:
-        // - when app backgrounds, snapshot timestamp
-        // - on resume, compute delta and store in offlineEarnings
-        // Here we'll just keep whatever was there.
-        val offlineStaySame = gs.economy.offlineEarnings
+        val newBoostMultiplier = if (boostStillActive) gs.modifiers.boostMultiplier else 1.0
 
         val updatedEconomy = gs.economy.copy(
             cash = newCash,
-            offlineEarnings = offlineStaySame
+            offlineEarnings = gs.economy.offlineEarnings
         )
-        // 5. Save new state
+        
         gameState = gs.copy(
-            economy = gs.economy.copy(
-                cash = newCash,
-                offlineEarnings = offlineStaySame
-            ),
+            economy = updatedEconomy,
             modifiers = gs.modifiers.copy(
                 boostActive = boostStillActive,
                 boostSecondsLeft = newBoostSecondsLeft,
@@ -203,7 +159,6 @@ class MainViewModel @Inject constructor(
             )
         )
 
-        // Persist the data
         viewModelScope.launch {
             saveEconomyUseCase(updatedEconomy)
         }
@@ -213,7 +168,6 @@ class MainViewModel @Inject constructor(
 
     private fun loadBusinesses() {
         viewModelScope.launch {
-            // Load businesses
             getAlBusinessesUseCase().collect { businesses ->
                 gameState = gameState.copy(businesses = businesses)
                 pushToUi()
@@ -225,21 +179,15 @@ class MainViewModel @Inject constructor(
                 pushToUi()
             }
         }
-
-        // Reset modifiers for session start
         val modifiers = GlobalModifiers(
             boostActive = false,
             boostSecondsLeft = 0,
             boostMultiplier = 1.0,
-            prestigePoints = gameState.modifiers.prestigePoints // Keep prestige if loaded
+            prestigePoints = gameState.modifiers.prestigePoints
         )
         gameState = gameState.copy(modifiers = modifiers)
         pushToUi()
     }
-
-    // ------------------------------------------------------------
-    // Helpers
-    // ------------------------------------------------------------
 
     private fun computeTotalIncomePerSec(gs: GameState): Double {
         return gs.businesses.sumOf { biz ->
@@ -248,21 +196,8 @@ class MainViewModel @Inject constructor(
     }
 
     private fun pushToUi() {
-        val gs = gameState
-        _uiState.value = gs.toUiState()
+        _uiState.value = gameState.toUiState()
     }
-
-    // ------------------------------------------------------------
-    // Initial State
-    // ------------------------------------------------------------
-
-    private fun createInitialUiState(): MainUiState {
-        return gameState.toUiState()
-    }
-
-    // ------------------------------------------------------------
-    // Mapping GameState -> MainUiState (for Compose)
-    // ------------------------------------------------------------
 
     private fun GameState.toUiState(): MainUiState {
         val totalIncomePerSec = computeTotalIncomePerSec(this)
@@ -282,20 +217,24 @@ class MainViewModel @Inject constructor(
             cash = economy.cash,
             incomePerSec = totalIncomePerSec,
             prestigePoints = modifiers.prestigePoints,
-            businesses = visibleBusinesses.map { it.toUi() },
+            businesses = visibleBusinesses.map { it.toUi(economy.cash) },
             boostActive = modifiers.boostActive,
             boostSecondsLeft = modifiers.boostSecondsLeft,
-            offlineEarnings = economy.offlineEarnings
+            offlineEarnings = economy.offlineEarnings,
+            selectedMultiplier = selectedMultiplier
         )
     }
 
-    private fun BusinessModel.toUi(): BusinessUiState {
+    private fun BusinessModel.toUi(currentCash: Double): BusinessUiState {
+        val (cost, levels) = calculateBulkUpgrade(selectedMultiplier, currentCash)
         return BusinessUiState(
             id = id,
             name = name,
             level = level,
-            incomePerSec = incomePerSecond(multiplier = 1.0), // UI shows base/sec without global boost
-            upgradeCost = upgradeCost(),
+            incomePerSec = incomePerSecond(multiplier = 1.0),
+            upgradeCost = cost,
+            upgradeLevelGain = levels,
+            canAfford = currentCash >= cost && levels > 0,
             automated = automated
         )
     }
