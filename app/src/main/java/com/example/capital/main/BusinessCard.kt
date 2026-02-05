@@ -82,16 +82,19 @@ fun BusinessCard(
 
                 Button(
                     onClick = onUpgrade,
-                    enabled = business.canAfford, // Disable button if not enough money
+                    enabled = business.canAfford,
                     shape = RoundedCornerShape(12.dp),
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp),
-                    colors = if (isLocked) {
-                        ButtonDefaults.buttonColors(
+                    colors = when {
+                        isLocked && business.canAfford -> ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.tertiary,
+                            contentColor = MaterialTheme.colorScheme.onTertiary
+                        )
+                        isLocked -> ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.secondary,
                             disabledContainerColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.38f)
                         )
-                    } else {
-                        ButtonDefaults.buttonColors()
+                        else -> ButtonDefaults.buttonColors()
                     }
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {

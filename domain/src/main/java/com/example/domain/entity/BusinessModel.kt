@@ -1,5 +1,6 @@
 package com.example.domain.entity
 
+import com.example.domain.entity.LevelMultiplier
 import kotlin.math.pow
 
 data class BusinessModel(
@@ -21,6 +22,7 @@ data class BusinessModel(
     fun upgradeCost(): Double = calculateCostForLevel(level)
 
     private fun calculateCostForLevel(lvl: Int): Double {
+        // base * (level + 1)^1.25 * 10
         return baseIncomePerSec * (lvl + 1).toDouble().pow(1.25) * 10.0
     }
 
@@ -46,24 +48,31 @@ data class BusinessModel(
     }
 
     private fun calculateMax(cash: Double): Pair<Double, Int> {
+        val firstLevelCost = upgradeCost()
+        
+        // If we can't even afford the first level, return its cost and 1 level
+        // The UI will show the cost and grey out the button correctly.
+        if (cash < firstLevelCost) {
+            return firstLevelCost to 1
+        }
+
         var total = 0.0
         var count = 0
-        // If locked, first level is mandatory
-        if (level == 0) {
-            val cost = upgradeCost()
-            return if (cash >= cost) cost to 1 else 0.0 to 0
-        }
         
+        // Try to buy as many as possible
         while (true) {
             val nextCost = calculateCostForLevel(level + count)
             if (total + nextCost <= cash) {
                 total += nextCost
                 count++
+                // Safety break to prevent infinite loops (though costs always increase)
+                if (count >= 1000) break 
             } else {
                 break
             }
         }
-        return total to (if (count == 0 && cash >= upgradeCost()) 1 else count)
+        
+        return total to count
     }
 
     fun levelUp(count: Int = 1): BusinessModel = copy(level = level + count)
