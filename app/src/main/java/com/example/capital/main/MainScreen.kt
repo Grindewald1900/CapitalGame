@@ -4,10 +4,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
@@ -17,12 +15,15 @@ import androidx.navigation.compose.rememberNavController
 import com.example.capital.ui.state.MainUiState
 import com.example.domain.entity.LevelMultiplier
 import com.example.capital.R
+import com.example.capital.settings.SettingsScreen
+import com.example.capital.shop.ShopScreen
+import com.example.capital.task.TasksScreen
 
 sealed class Screen(val route: String, val label: String, val iconRes: Int) {
-    object Adventure : Screen("adventure", "Adventure", com.example.capital.R.drawable.baseline_add_business_24)
-    object Managers : Screen("managers", "Managers", R.drawable.baseline_manage_accounts_24)
-    object Upgrades : Screen("upgrades", "Upgrades", R.drawable.baseline_trending_up_24)
-    object Investors : Screen("settings", "Settings", R.drawable.baseline_account_balance_wallet_24)
+    object Adventure : Screen("adventure", "Adventure", R.drawable.baseline_add_business_24)
+    object Tasks : Screen("tasks", "Tasks", R.drawable.baseline_task_24)
+    object Shop : Screen("shops", "Shops", R.drawable.outline_add_shopping_cart_24)
+    object Settings : Screen("settings", "Settings", R.drawable.baseline_account_balance_wallet_24)
 }
 
 @Composable
@@ -37,9 +38,9 @@ fun MainScreen(
     val navController = rememberNavController()
     val navItems = listOf(
         Screen.Adventure,
-        Screen.Managers,
-        Screen.Upgrades,
-        Screen.Investors
+        Screen.Tasks,
+        Screen.Shop,
+        Screen.Settings
     )
 
     Scaffold(
@@ -79,45 +80,28 @@ fun MainScreen(
         }
     ) { innerPadding ->
         Box(modifier = Modifier.padding(innerPadding)) {
-            Column(modifier = Modifier.fillMaxSize()) {
-                TopHeader(
-                    cash = state.cash,
-                    incomePerSec = state.incomePerSec,
-                    influence = state.influence,
-                    equity = state.equity,
-                    prestigePoints = state.prestigePoints,
-                    selectedMultiplier = state.selectedMultiplier,
-                    onOpenPrestige = onOpenPrestige,
-                    onSpeedSelected = onSpeedSelected
-                )
-
-                NavHost(
-                    navController = navController,
-                    startDestination = Screen.Adventure.route,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    composable(Screen.Adventure.route) {
-                        AdventureScreen(state = state, onUpgradeBusiness = onUpgradeBusiness)
-                    }
-                    composable(Screen.Managers.route) {
-                        ManagersScreen()
-                    }
-                    composable(Screen.Upgrades.route) {
-                        GlobalUpgradesScreen()
-                    }
-                    composable(Screen.Investors.route) {
-                        InvestorsScreen()
-                    }
+            NavHost(
+                navController = navController,
+                startDestination = Screen.Adventure.route,
+                modifier = Modifier.fillMaxSize()
+            ) {
+                composable(Screen.Adventure.route) {
+                    AdventureScreen(
+                        state = state, 
+                        onUpgradeBusiness = onUpgradeBusiness,
+                        onOpenPrestige = onOpenPrestige,
+                        onSpeedSelected = onSpeedSelected
+                    )
                 }
-            }
-
-            if (state.boostActive) {
-                BoostCountdownChip(
-                    secondsLeft = state.boostSecondsLeft,
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(top = 120.dp, end = 16.dp) // Adjusted padding for new header height
-                )
+                composable(Screen.Tasks.route) {
+                    TasksScreen()
+                }
+                composable(Screen.Shop.route) {
+                    ShopScreen()
+                }
+                composable(Screen.Settings.route) {
+                    SettingsScreen()
+                }
             }
         }
     }
