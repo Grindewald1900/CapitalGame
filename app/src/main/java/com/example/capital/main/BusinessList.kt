@@ -11,11 +11,12 @@ import com.example.capital.ui.state.BusinessUiState
 @Composable
 fun BusinessList(
     businesses: List<BusinessUiState>,
-    onUpgrade: (String) -> Unit
+    onUpgrade: (String) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
+        modifier = modifier
+            .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {

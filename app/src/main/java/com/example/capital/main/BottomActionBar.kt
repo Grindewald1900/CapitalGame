@@ -21,7 +21,7 @@ fun BottomActionBar(
         shadowElevation = 16.dp,
         modifier = modifier
             .fillMaxWidth()
-            .heightIn(min = 88.dp)
+            .height(80.dp)
     ) {
         Row(
             modifier = Modifier

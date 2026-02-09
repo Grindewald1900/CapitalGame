@@ -13,6 +13,8 @@ fun AdventureScreen(
     state: MainUiState,
     onUpgradeBusiness: (businessId: String) -> Unit,
     onOpenPrestige: () -> Unit,
+    onClaimOffline: () -> Unit,
+    onActivateBoost: () -> Unit,
     onSpeedSelected: (LevelMultiplier) -> Unit
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
@@ -27,15 +29,18 @@ fun AdventureScreen(
                 prestigePoints = state.prestigePoints,
                 selectedMultiplier = state.selectedMultiplier,
                 onOpenPrestige = onOpenPrestige,
-                onSpeedSelected = onSpeedSelected
+                onSpeedSelected = onSpeedSelected,
             )
-
             BusinessList(
                 businesses = state.businesses,
-                onUpgrade = onUpgradeBusiness
+                onUpgrade = onUpgradeBusiness,
+                modifier = Modifier.weight(1f) // Make BusinessList take up available space
             )
-
-            Spacer(modifier = Modifier.height(16.dp))
+            BottomActionBar(
+                offlineEarnings = state.offlineEarnings,
+                onClaimOffline = onClaimOffline,
+                onActivateBoost = onActivateBoost,
+            )
         }
 
         if (state.boostActive) {

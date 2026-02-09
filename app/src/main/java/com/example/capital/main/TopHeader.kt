@@ -1,10 +1,26 @@
 package com.example.capital.main
 
-import androidx.compose.animation.*
-import androidx.compose.foundation.layout.*
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -12,7 +28,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.capital.ui.theme.Golden
+import com.example.capital.ui.theme.LightGolden
 import com.example.capital.utils.formatMoney
 import com.example.domain.entity.LevelMultiplier
 
@@ -25,7 +41,7 @@ fun TopHeader(
     prestigePoints: Int,
     selectedMultiplier: LevelMultiplier,
     onOpenPrestige: () -> Unit,
-    onSpeedSelected: (speed: LevelMultiplier) -> Unit
+    onSpeedSelected: (speed: LevelMultiplier) -> Unit,
 ) {
     Surface(
         tonalElevation = 4.dp,
@@ -95,10 +111,10 @@ fun TopHeader(
                     label = "Equity",
                     value = equity,
                     icon = "📈",
-                    color = Golden,
+                    color = LightGolden,
                     modifier = Modifier.weight(1f)
                 )
-                
+
                 // Prestige Button
                 FilledTonalButton(
                     onClick = onOpenPrestige,
@@ -133,11 +149,12 @@ fun TopHeader(
 
 @Composable
 private fun CurrencyChip(
+    modifier: Modifier = Modifier,
     label: String,
     value: Double,
     icon: String,
     color: Color,
-    modifier: Modifier = Modifier
+    textColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
 ) {
     Surface(
         color = color,
@@ -153,7 +170,7 @@ private fun CurrencyChip(
                 Text(
                     text = label.uppercase(),
                     style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = textColor
                 )
                 AnimatedNumberTicker(
                     text = formatMoney(value).removePrefix("$"),

@@ -45,36 +45,29 @@ fun MainScreen(
 
     Scaffold(
         bottomBar = {
-            Column {
-                BottomActionBar(
-                    offlineEarnings = state.offlineEarnings,
-                    onClaimOffline = onClaimOffline,
-                    onActivateBoost = onActivateBoost
-                )
-                NavigationBar {
-                    val navBackStackEntry by navController.currentBackStackEntryAsState()
-                    val currentDestination = navBackStackEntry?.destination
-                    navItems.forEach { screen ->
-                        NavigationBarItem(
-                            icon = { 
-                                Icon(
-                                    painter = painterResource(id = screen.iconRes), 
-                                    contentDescription = null 
-                                ) 
-                            },
-                            label = { Text(screen.label) },
-                            selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
-                            onClick = {
-                                navController.navigate(screen.route) {
-                                    popUpTo(navController.graph.findStartDestination().id) {
-                                        saveState = true
-                                    }
-                                    launchSingleTop = true
-                                    restoreState = true
+            NavigationBar {
+                val navBackStackEntry by navController.currentBackStackEntryAsState()
+                val currentDestination = navBackStackEntry?.destination
+                navItems.forEach { screen ->
+                    NavigationBarItem(
+                        icon = { 
+                            Icon(
+                                painter = painterResource(id = screen.iconRes), 
+                                contentDescription = null 
+                            ) 
+                        },
+                        label = { Text(screen.label) },
+                        selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
+                        onClick = {
+                            navController.navigate(screen.route) {
+                                popUpTo(navController.graph.findStartDestination().id) {
+                                    saveState = true
                                 }
+                                launchSingleTop = true
+                                restoreState = true
                             }
-                        )
-                    }
+                        }
+                    )
                 }
             }
         }
@@ -90,6 +83,8 @@ fun MainScreen(
                         state = state, 
                         onUpgradeBusiness = onUpgradeBusiness,
                         onOpenPrestige = onOpenPrestige,
+                        onClaimOffline = onClaimOffline,
+                        onActivateBoost = onActivateBoost,
                         onSpeedSelected = onSpeedSelected
                     )
                 }
