@@ -216,6 +216,8 @@ class MainViewModel @Inject constructor(
         return MainUiState(
             cash = economy.cash,
             incomePerSec = totalIncomePerSec,
+            influence = economy.influence,
+            equity = economy.equity,
             prestigePoints = modifiers.prestigePoints,
             businesses = visibleBusinesses.map { it.toUi(economy.cash) },
             boostActive = modifiers.boostActive,

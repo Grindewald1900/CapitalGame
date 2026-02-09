@@ -6,7 +6,7 @@ plugins {
 
 // domain/build.gradle.kts
 android {
-    namespace = "com.example.capital"
+    namespace = "com.example.capital.domain"
     compileSdk {
         version = release(36)
     }

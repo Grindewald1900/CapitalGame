@@ -14,15 +14,15 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.example.capital.R
 import com.example.capital.ui.state.MainUiState
 import com.example.domain.entity.LevelMultiplier
+import com.example.capital.R
 
 sealed class Screen(val route: String, val label: String, val iconRes: Int) {
     object Adventure : Screen("adventure", "Adventure", com.example.capital.R.drawable.baseline_add_business_24)
     object Managers : Screen("managers", "Managers", R.drawable.baseline_manage_accounts_24)
     object Upgrades : Screen("upgrades", "Upgrades", R.drawable.baseline_trending_up_24)
-    object Investors : Screen("investors", "Investors", R.drawable.baseline_account_balance_wallet_24)
+    object Investors : Screen("settings", "Settings", R.drawable.baseline_account_balance_wallet_24)
 }
 
 @Composable
@@ -83,6 +83,8 @@ fun MainScreen(
                 TopHeader(
                     cash = state.cash,
                     incomePerSec = state.incomePerSec,
+                    influence = state.influence,
+                    equity = state.equity,
                     prestigePoints = state.prestigePoints,
                     selectedMultiplier = state.selectedMultiplier,
                     onOpenPrestige = onOpenPrestige,
@@ -114,7 +116,7 @@ fun MainScreen(
                     secondsLeft = state.boostSecondsLeft,
                     modifier = Modifier
                         .align(Alignment.TopEnd)
-                        .padding(top = 96.dp, end = 16.dp)
+                        .padding(top = 120.dp, end = 16.dp) // Adjusted padding for new header height
                 )
             }
         }
