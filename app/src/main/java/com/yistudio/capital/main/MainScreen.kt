@@ -21,7 +21,7 @@ import androidx.navigation.compose.rememberNavController
 import com.yistudio.capital.R
 import com.yistudio.capital.settings.SettingsScreen
 import com.yistudio.capital.shop.ShopScreen
-import com.yistudio.capital.task.TasksScreen
+import com.yistudio.capital.task.TaskScreen
 import com.yistudio.capital.ui.state.MainUiState
 import com.yistudio.domain.entity.LevelMultiplier
 
@@ -95,7 +95,7 @@ fun MainScreen(
                     )
                 }
                 composable(Screen.Tasks.route) {
-                    TasksScreen()
+                    TaskScreen()
                 }
                 composable(Screen.Shop.route) {
                     ShopScreen()
