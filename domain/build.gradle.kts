@@ -6,7 +6,7 @@ plugins {
 
 // domain/build.gradle.kts
 android {
-    namespace = "com.example.capital.domain"
+    namespace = "com.yistudio.capital.domain"
     compileSdk {
         version = release(36)
     }

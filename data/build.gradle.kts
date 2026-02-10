@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.capital.data"
+    namespace = "com.yistudio.capital.data"
     compileSdk {
         version = release(36)
     }

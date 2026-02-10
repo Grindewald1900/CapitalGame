@@ -7,13 +7,13 @@ plugins {
 }
 
 android {
-    namespace = "com.example.capital"
+    namespace = "com.yistudio.capital"
     compileSdk {
         version = release(36)
     }
 
     defaultConfig {
-        applicationId = "com.example.capital"
+        applicationId = "com.yistudio.capital"
         minSdk = 24
         targetSdk = 36
         versionCode = 1
