@@ -20,6 +20,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.yistudio.capital.R
+import com.yistudio.capital.managers.ManagersScreen
 import com.yistudio.capital.settings.SettingsScreen
 import com.yistudio.capital.shop.ShopScreen
 import com.yistudio.capital.task.TaskScreen
@@ -30,6 +31,7 @@ sealed class Screen(val route: String, val label: String, val iconRes: Int) {
     object Adventure : Screen("adventure", "Adventure", R.drawable.baseline_add_business_24)
     object Tasks : Screen("tasks", "Tasks", R.drawable.baseline_task_24)
     object Shop : Screen("shops", "Shops", R.drawable.outline_add_shopping_cart_24)
+    object Manager : Screen("managers", "Managers", R.drawable.baseline_manage_accounts_24)
     object Settings : Screen("settings", "Settings", R.drawable.baseline_account_balance_wallet_24)
 }
 
@@ -47,6 +49,7 @@ fun MainScreen(
     val navItems = listOf(
         Screen.Adventure,
         Screen.Tasks,
+        Screen.Manager,
         Screen.Settings
     )
 
@@ -102,8 +105,8 @@ fun MainScreen(
                 composable(Screen.Tasks.route) {
                     TaskScreen()
                 }
-                composable(Screen.Shop.route) {
-                    ShopScreen()
+                composable(Screen.Manager.route) {
+                    ManagersScreen()
                 }
                 composable(Screen.Settings.route) {
                     SettingsScreen()

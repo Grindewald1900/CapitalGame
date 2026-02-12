@@ -7,6 +7,7 @@ import com.yistudio.data.entity.TaskPreferences
 import com.yistudio.data.local.TaskSerializer
 import com.yistudio.domain.repository.BusinessRepository
 import com.yistudio.domain.repository.EconomyRepository
+import com.yistudio.domain.repository.ManagerRepository
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -35,6 +36,12 @@ abstract class DataModule {
     abstract fun bindEconomyRepository(
         impl: EconomyRepositoryImpl
     ): EconomyRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindManagerRepository(
+        impl: ManagerRepositoryImpl
+    ): ManagerRepository
 
     companion object {
         @Provides
