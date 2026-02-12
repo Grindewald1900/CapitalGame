@@ -4,7 +4,6 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -51,15 +50,15 @@ fun TaskCard(
                         color = Dark
                     )
                     
-                    val icon = when (task.type) {
-                        TaskType.SPRINT -> R.drawable.baseline_task_24
+                    val iconRes = when (task.type) {
+                        TaskType.SPRINT -> R.drawable.outline_ads_click_24
                         TaskType.MILESTONE -> R.drawable.baseline_task_24
-                        TaskType.MOONSHOT -> R.drawable.baseline_task_24
+                        TaskType.MOONSHOT -> R.drawable.baseline_trending_up_24
                     }
                     
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
-                            painterResource(R.drawable.baseline_task_24),
+                            painter = painterResource(id = iconRes),
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(14.dp)
@@ -89,14 +88,14 @@ fun TaskCard(
             Spacer(modifier = Modifier.height(16.dp))
 
             // Progress Section
-            val progress = (task.currentProgress.toFloat() / task.targetGoal).coerceIn(0f, 1f)
+            val progress = (task.currentProgress / task.targetGoal.coerceAtLeast(1.0)).coerceIn(0.0, 1.0).toFloat()
             
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 LinearProgressIndicator(
-                    progress = progress,
+                    progress = { progress },
                     modifier = Modifier
                         .weight(1f)
                         .height(6.dp)
@@ -108,7 +107,7 @@ fun TaskCard(
                 Spacer(Modifier.width(12.dp))
                 
                 Text(
-                    text = "${task.currentProgress}/${task.targetGoal}",
+                    text = "${formatMoney(task.currentProgress).removePrefix("$")}/${formatMoney(task.targetGoal).removePrefix("$")}",
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Bold,
                     color = Dark
@@ -152,6 +151,28 @@ fun TaskCard(
 @Composable
 private fun RewardBadge(task: TaskEntity) {
     Row(verticalAlignment = Alignment.CenterVertically) {
+        if (task.rewardCash > 0) {
+            Surface(
+                color = MaterialTheme.colorScheme.primaryContainer,
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(text = "💰", fontSize = 12.sp)
+                    Spacer(Modifier.width(4.dp))
+                    Text(
+                        text = formatMoney(task.rewardCash),
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                }
+            }
+            Spacer(Modifier.width(8.dp))
+        }
+
         if (task.rewardInfluence > 0) {
             Surface(
                 color = MaterialTheme.colorScheme.secondaryContainer,
@@ -164,17 +185,17 @@ private fun RewardBadge(task: TaskEntity) {
                     Text(text = "⭐", fontSize = 12.sp)
                     Spacer(Modifier.width(4.dp))
                     Text(
-                        text = formatMoney(task.rewardInfluence.toDouble()).removePrefix("$"),
+                        text = formatMoney(task.rewardInfluence).removePrefix("$"),
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSecondaryContainer
                     )
                 }
             }
+            Spacer(Modifier.width(8.dp))
         }
         
         if (task.rewardEquity > 0) {
-            if (task.rewardInfluence > 0) Spacer(Modifier.width(8.dp))
             Surface(
                 color = Dark,
                 shape = RoundedCornerShape(8.dp),

@@ -18,4 +18,8 @@ object EconomyKeys {
     val OFFLINE_EARNINGS = doublePreferencesKey("offline_earnings") // store only when non-null
     val LAST_SEEN_MS = longPreferencesKey("last_seen_ms")
     val INCOME_PER_SEC = doublePreferencesKey("income_per_sec_at_exit")
+    
+    val INFLUENCE = doublePreferencesKey("influence")
+    val EQUITY = doublePreferencesKey("equity")
+    val TOTAL_CASH_EARNED = doublePreferencesKey("total_cash_earned")
 }

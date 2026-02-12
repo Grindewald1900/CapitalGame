@@ -26,13 +26,26 @@ class EconomyRepositoryImpl @Inject constructor(
             .map { prefs ->
                 val cash = prefs[EconomyKeys.CASH] ?: 100.0
                 val offline = prefs[EconomyKeys.OFFLINE_EARNINGS] ?: 0.0
-                EconomyModel(cash = cash, offlineEarnings = offline)
+                val influence = prefs[EconomyKeys.INFLUENCE] ?: 0.0
+                val equity = prefs[EconomyKeys.EQUITY] ?: 0.0
+                val totalCashEarned = prefs[EconomyKeys.TOTAL_CASH_EARNED] ?: 0.0
+                
+                EconomyModel(
+                    cash = cash, 
+                    offlineEarnings = offline,
+                    influence = influence,
+                    equity = equity,
+                    totalCashEarned = totalCashEarned
+                )
             }
 
     override suspend fun saveEconomy(model: EconomyModel) {
         appContext.economyDataStore.edit { prefs ->
             prefs[EconomyKeys.CASH] = model.cash
             prefs[EconomyKeys.OFFLINE_EARNINGS] = model.offlineEarnings
+            prefs[EconomyKeys.INFLUENCE] = model.influence
+            prefs[EconomyKeys.EQUITY] = model.equity
+            prefs[EconomyKeys.TOTAL_CASH_EARNED] = model.totalCashEarned
         }
     }
 

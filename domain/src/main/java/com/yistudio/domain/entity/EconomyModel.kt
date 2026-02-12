@@ -4,5 +4,6 @@ data class EconomyModel(
     val cash: Double,
     val offlineEarnings: Double,
     val influence: Double = 0.0,
-    val equity: Double = 0.0
+    val equity: Double = 0.0,
+    val totalCashEarned: Double = 0.0
 )

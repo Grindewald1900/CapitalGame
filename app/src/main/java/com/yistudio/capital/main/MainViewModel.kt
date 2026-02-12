@@ -13,6 +13,9 @@ import com.yistudio.domain.usecase.GetAllBusinessUseCase
 import com.yistudio.domain.usecase.GetEconomyUseCase
 import com.yistudio.domain.usecase.SaveAllBusinessesUseCase
 import com.yistudio.domain.usecase.SaveEconomyUseCase
+import com.yistudio.data.repository.TaskRepository
+import com.yistudio.capital.engine.event.GameEvent
+import com.yistudio.capital.engine.event.GameEventBus
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -26,7 +29,9 @@ class MainViewModel @Inject constructor(
     private val getAlBusinessesUseCase: GetAllBusinessUseCase,
     private val getEconomyUseCase: GetEconomyUseCase,
     private val saveEconomyUseCase: SaveEconomyUseCase,
-    private val saveAllBusinessesUseCase: SaveAllBusinessesUseCase
+    private val saveAllBusinessesUseCase: SaveAllBusinessesUseCase,
+    private val taskRepository: TaskRepository,
+    private val eventBus: GameEventBus
 ) :
     ViewModel() {
 
@@ -65,6 +70,8 @@ class MainViewModel @Inject constructor(
 
         viewModelScope.launch {
             saveAllBusinessesUseCase(newBizList)
+            // 发送业务升级事件到 TaskEngine
+            eventBus.post(GameEvent.BusinessUpgraded(businessId, upgraded.level))
         }
 
         gameState = gs.copy(
@@ -84,13 +91,15 @@ class MainViewModel @Inject constructor(
 
         val economy = gs.economy.copy(
             cash = gs.economy.cash + reward,
-            offlineEarnings = 0.0
+            offlineEarnings = 0.0,
+            totalCashEarned = gs.economy.totalCashEarned + reward
         )
         gameState = gs.copy(
             economy = economy
         )
         viewModelScope.launch {
             saveEconomyUseCase(economy)
+            eventBus.post(GameEvent.CapitalChanged(economy.totalCashEarned))
         }
 
         pushToUi()
@@ -120,12 +129,18 @@ class MainViewModel @Inject constructor(
         tickerJob?.cancel()
         tickerJob = viewModelScope.launch {
             var lastTickTime = System.currentTimeMillis()
+            var lastTaskCheckTime = 0L
             while (true) {
                 delay(1000L)
                 val now = System.currentTimeMillis()
                 val deltaSeconds = ((now - lastTickTime) / 1000.0).coerceAtLeast(0.0)
                 lastTickTime = now
                 tick(deltaSeconds)
+
+                if (now - lastTaskCheckTime > 5000) {
+                    lastTaskCheckTime = now
+                    checkTasks()
+                }
             }
         }
     }
@@ -135,6 +150,7 @@ class MainViewModel @Inject constructor(
         val totalIncomePerSec = computeTotalIncomePerSec(gs)
         val earned = totalIncomePerSec * deltaSeconds
         val newCash = gs.economy.cash + earned
+        val newTotalEarned = gs.economy.totalCashEarned + earned
 
         val newBoostSecondsLeft = if (gs.modifiers.boostActive) {
             (gs.modifiers.boostSecondsLeft - deltaSeconds).toInt().coerceAtLeast(0)
@@ -147,7 +163,8 @@ class MainViewModel @Inject constructor(
 
         val updatedEconomy = gs.economy.copy(
             cash = newCash,
-            offlineEarnings = gs.economy.offlineEarnings
+            offlineEarnings = gs.economy.offlineEarnings,
+            totalCashEarned = newTotalEarned
         )
         
         gameState = gs.copy(
@@ -161,6 +178,7 @@ class MainViewModel @Inject constructor(
 
         viewModelScope.launch {
             saveEconomyUseCase(updatedEconomy)
+            eventBus.post(GameEvent.CapitalChanged(newTotalEarned))
         }
 
         pushToUi()
@@ -187,6 +205,16 @@ class MainViewModel @Inject constructor(
         )
         gameState = gameState.copy(modifiers = modifiers)
         pushToUi()
+    }
+
+    private fun checkTasks() {
+        viewModelScope.launch {
+            val totalLevels = gameState.businesses.sumOf { it.level }
+            taskRepository.checkAndUnlockTasks(
+                totalCash = gameState.economy.totalCashEarned,
+                currentSeries = gameState.modifiers.prestigePoints // 这里暂时用声望点作为 Series 级别
+            )
+        }
     }
 
     private fun computeTotalIncomePerSec(gs: GameState): Double {

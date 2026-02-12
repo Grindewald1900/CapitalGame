@@ -5,9 +5,12 @@ import androidx.lifecycle.viewModelScope
 import com.yistudio.capital.ui.state.TaskUiState
 import com.yistudio.data.entity.TaskType
 import com.yistudio.data.repository.TaskRepository
+import com.yistudio.domain.usecase.GetEconomyUseCase
+import com.yistudio.domain.usecase.SaveEconomyUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -15,7 +18,9 @@ import javax.inject.Inject
 
 @HiltViewModel
 class TaskViewModel @Inject constructor(
-    private val repository: TaskRepository
+    private val repository: TaskRepository,
+    private val getEconomyUseCase: GetEconomyUseCase,
+    private val saveEconomyUseCase: SaveEconomyUseCase
 ) : ViewModel() {
 
     // 将任务列表按类型分组并映射到 UI 状态
@@ -39,8 +44,18 @@ class TaskViewModel @Inject constructor(
      */
     fun onClaimReward(taskId: String) {
         viewModelScope.launch {
-            repository.claimReward(taskId)
-            // 这里可以触发一个侧发效应（Side Effect），比如播放一个金币掉落动画
+            val claimedTask = repository.claimReward(taskId)
+            if (claimedTask != null) {
+                // Apply rewards to economy
+                val currentEconomy = getEconomyUseCase().first()
+                val updatedEconomy = currentEconomy.copy(
+                    cash = currentEconomy.cash + claimedTask.rewardCash,
+                    influence = currentEconomy.influence + claimedTask.rewardInfluence,
+                    equity = currentEconomy.equity + claimedTask.rewardEquity,
+                    totalCashEarned = currentEconomy.totalCashEarned + claimedTask.rewardCash
+                )
+                saveEconomyUseCase(updatedEconomy)
+            }
         }
     }
 }
