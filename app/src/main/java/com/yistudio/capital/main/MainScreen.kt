@@ -1,6 +1,7 @@
 package com.yistudio.capital.main
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
@@ -42,10 +43,10 @@ fun MainScreen(
     onSpeedSelected: (LevelMultiplier) -> Unit
 ) {
     val navController = rememberNavController()
+    // Removed Shop from bottom navigation
     val navItems = listOf(
         Screen.Adventure,
         Screen.Tasks,
-        Screen.Shop,
         Screen.Settings
     )
 
@@ -78,7 +79,11 @@ fun MainScreen(
             }
         }
     ) { innerPadding ->
-        Box(modifier = Modifier.padding(innerPadding)) {
+        // BoxWithConstraints to get screen dimensions for the FAB
+        BoxWithConstraints(modifier = Modifier.padding(innerPadding).fillMaxSize()) {
+            val maxWidthPx = constraints.maxWidth.toFloat()
+            val maxHeightPx = constraints.maxHeight.toFloat()
+
             NavHost(
                 navController = navController,
                 startDestination = Screen.Adventure.route,
@@ -104,6 +109,18 @@ fun MainScreen(
                     SettingsScreen()
                 }
             }
+
+            // Draggable FAB overlay
+            DraggableShopFab(
+                maxWidthPx = maxWidthPx,
+                maxHeightPx = maxHeightPx,
+                onFabClick = {
+                    navController.navigate(Screen.Shop.route) {
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                }
+            )
         }
     }
 }
